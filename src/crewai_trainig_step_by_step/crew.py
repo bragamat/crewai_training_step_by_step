@@ -19,6 +19,11 @@ from pydantic import BaseModel
 # from crewai_trainig_step_by_step.tools.serper_scraper_tool import SerperScrapeTool
 from serper_scrape_tool.tool import SerperScrapeTool
 
+# from eval import EvalListenerSetup
+from openai_compatible_embedding_wrapper import get_embedder_config
+
+# eval_listener = EvalListenerSetup()
+
 
 class SummarizationOutput(BaseModel):
     topic: str
@@ -52,11 +57,6 @@ class CrewaiTrainigStepByStep:
 
     agents: List[BaseAgent]
     tasks: List[Task]
-
-    llm = LLM(
-        model=os.getenv("MODEL"),
-        temperature=0.2,
-    )
 
     text_source = TextFileKnowledgeSource(
         file_paths=[
@@ -104,10 +104,15 @@ class CrewaiTrainigStepByStep:
     def research_task(self) -> Task:
         return Task(
             config=self.tasks_config["research_task"],  # type: ignore[index]
-            guardrail=LLMGuardrail(
-                description="The research task should be detailed and strictly related to the topic.",
-                llm=LLM(model="gpt-4.1-mini", temperature=0.2),
-            ),
+            # guardrail=LLMGuardrail(
+            #     description="The research task should be detailed and strictly related to the topic.",
+            #     llm=LLM(
+            #         model="openai/openai/gpt-4o",
+            #         base_url=os.getenv("OPENAI_API_BASE"),
+            #         api_key=os.getenv("OPENAI_API_KEY"),
+            #         temperature=0.2,
+            #     ),
+            # ),
         )
 
     @task
@@ -135,6 +140,6 @@ class CrewaiTrainigStepByStep:
             process=Process.sequential,
             verbose=True,
             # memory=True,
-            llm=self.llm,
+            embedder=get_embedder_config(),  # Try simplest approach first!
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
