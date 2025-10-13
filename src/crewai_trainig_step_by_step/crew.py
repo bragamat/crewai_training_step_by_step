@@ -11,18 +11,20 @@ from crewai import (
     TaskOutput,
 )
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
+
+# from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
 from crewai.project import CrewBase, after_kickoff, agent, before_kickoff, crew, task
 from crewai_tools import SerperDevTool
 from pydantic import BaseModel
 
-# from crewai_trainig_step_by_step.tools.serper_scraper_tool import SerperScrapeTool
-from serper_scrape_tool.tool import SerperScrapeTool
+from crewai_trainig_step_by_step.tools.serper_scraper_tool import SerperScrapeTool
 
-# from eval import EvalListenerSetup
-from openai_compatible_embedding_wrapper import get_embedder_config
+# from serper_scrape_tool.tool import SerperScrapeTool
+from eval import EvalListenerSetup
 
-# eval_listener = EvalListenerSetup()
+# from openai_compatible_embedding_wrapper import get_embedder_config
+
+eval_listener = EvalListenerSetup()
 
 
 class SummarizationOutput(BaseModel):
@@ -58,11 +60,11 @@ class CrewaiTrainigStepByStep:
     agents: List[BaseAgent]
     tasks: List[Task]
 
-    text_source = TextFileKnowledgeSource(
-        file_paths=[
-            "user_preference.txt",
-        ]
-    )
+    # text_source = TextFileKnowledgeSource(
+    #     file_paths=[
+    #         "user_preference.txt",
+    #     ]
+    # )
 
     @before_kickoff
     def prepare_inputs(self, inputs):
@@ -96,7 +98,7 @@ class CrewaiTrainigStepByStep:
     def reporting_analyst(self) -> Agent:
         return Agent(
             from_repository="reporting-analyst",
-            knowledge_sources=[self.text_source],
+            # knowledge_sources=[self.text_source],
             reasoning=True,
         )
 
@@ -120,7 +122,7 @@ class CrewaiTrainigStepByStep:
         return Task(
             config=self.tasks_config["reporting_task"],  # type: ignore[index]
             output_file="report.md",
-            guardrail=validate_content_length,
+            # guardrail=validate_content_length,
         )
 
     @task
@@ -140,6 +142,6 @@ class CrewaiTrainigStepByStep:
             process=Process.sequential,
             verbose=True,
             # memory=True,
-            embedder=get_embedder_config(),  # Try simplest approach first!
+            # embedder=get_embedder_config(),  # Try simplest approach first!
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
