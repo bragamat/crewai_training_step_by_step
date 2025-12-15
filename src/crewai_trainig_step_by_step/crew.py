@@ -1,28 +1,13 @@
-import os
-from typing import Any, List, Tuple
+from typing import List
 
-from crewai import (
-    LLM,
-    Agent,
-    Crew,
-    LLMGuardrail,
-    Process,
-    Task,
-    TaskOutput,
-)
+from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-
-# from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
 from crewai.project import CrewBase, after_kickoff, agent, before_kickoff, crew, task
 from crewai_tools import SerperDevTool
 from pydantic import BaseModel
 
 from crewai_trainig_step_by_step.tools.serper_scraper_tool import SerperScrapeTool
-
-# from serper_scrape_tool.tool import SerperScrapeTool
 from eval import EvalListenerSetup
-
-# from openai_compatible_embedding_wrapper import get_embedder_config
 
 eval_listener = EvalListenerSetup()
 
@@ -33,38 +18,12 @@ class SummarizationOutput(BaseModel):
     key_points: List[str]
 
 
-def validate_content_length(result: TaskOutput) -> Tuple[bool, Any]:
-    """Validate that the content meets requirements."""
-    try:
-        # Extract the actual content string from TaskOutput
-        content = result.raw if hasattr(result, "raw") else str(result)
-
-        # Check word count
-        word_count = len(content.split())
-        if word_count > 1500:
-            return (
-                False,
-                "Blog content exceeds 1500 words, it should be less than 1500 words",
-            )
-
-        # Additional validation logic here
-        return (True, content.strip())
-    except Exception as e:
-        return (False, f"Unexpected error during validation: {str(e)}")
-
-
 @CrewBase
 class CrewaiTrainigStepByStep:
     """CrewaiTrainigStepByStep crew"""
 
     agents: List[BaseAgent]
     tasks: List[Task]
-
-    # text_source = TextFileKnowledgeSource(
-    #     file_paths=[
-    #         "user_preference.txt",
-    #     ]
-    # )
 
     @before_kickoff
     def prepare_inputs(self, inputs):
@@ -97,24 +56,14 @@ class CrewaiTrainigStepByStep:
     @agent
     def reporting_analyst(self) -> Agent:
         return Agent(
-            from_repository="reporting-analyst",
-            # knowledge_sources=[self.text_source],
-            reasoning=True,
+            config=self.agents_config["reporting_analyst"],  # type: ignore[index]
+            verbose=True,
         )
 
     @task
     def research_task(self) -> Task:
         return Task(
             config=self.tasks_config["research_task"],  # type: ignore[index]
-            # guardrail=LLMGuardrail(
-            #     description="The research task should be detailed and strictly related to the topic.",
-            #     llm=LLM(
-            #         model="openai/openai/gpt-4o",
-            #         base_url=os.getenv("OPENAI_API_BASE"),
-            #         api_key=os.getenv("OPENAI_API_KEY"),
-            #         temperature=0.2,
-            #     ),
-            # ),
         )
 
     @task
@@ -122,7 +71,6 @@ class CrewaiTrainigStepByStep:
         return Task(
             config=self.tasks_config["reporting_task"],  # type: ignore[index]
             output_file="report.md",
-            # guardrail=validate_content_length,
         )
 
     @task
@@ -137,11 +85,8 @@ class CrewaiTrainigStepByStep:
         """Creates the CrewaiTrainigStepByStep crew"""
 
         return Crew(
-            agents=self.agents,  # Automatically created by the @agent decorator
-            tasks=self.tasks,  # Automatically created by the @task decorator
+            agents=self.agents,
+            tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
-            # memory=True,
-            # embedder=get_embedder_config(),  # Try simplest approach first!
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
