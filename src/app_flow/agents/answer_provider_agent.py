@@ -21,11 +21,13 @@ answer_agent = Agent(
 
 def generate_answer(state) -> str:
         prompt = f"""
-        Based on the user's message and any research conducted, generate a 
+        Based on the user's message, any research conducted and any possible
+        follow up questions, generate a 
         comprehensive answer.
-        User Message: "{state.user_message}"
 
-        research date: "{state.research_data}" 
+        User Message: "{state.user_message}"
+        follow up questions: "{state.followup_questions}"
+        report: "{state.report}" 
         history: "{state.history}"
         """
 

@@ -11,3 +11,5 @@ class DeepResearchState(BaseModel):
     user_message: str = ""
     research_needed: bool = False
     research_data: str = ""
+    report: str = ""
+    followup_questions: List[str] = []
